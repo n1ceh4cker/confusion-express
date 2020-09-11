@@ -9,6 +9,7 @@ var usersRouter = require('./routes/users');
 var dishRouter = require('./routes/dishRouter');
 var promoRouter = require('./routes/promoRouter');
 var leaderRouter = require('./routes/leaderRouter');
+const mongoose = require('mongoose');
 
 var app = express();
 
@@ -44,4 +45,11 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
+const url = 'mongodb://localhost:27017/confusion'
+const connect = mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
+connect.then((db) =>{
+  console.log('Connected to server')
+}, (err) => {
+  console.log(err)
+})
 module.exports = app;
