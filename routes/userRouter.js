@@ -3,6 +3,17 @@ const User = require('../models/users');
 const passport = require('passport');
 const authenticate = require('../authenticate')
 
+router.get('/', authenticate.veryfyUser, authenticate.verifyAdmin, (req, res, next) => {
+  User.find({})
+  .then((users) => {
+      res.statusCode = 200
+      res.setHeader('Content-Type', 'application/json')
+      res.json(users)
+  }, (err) => next(err)
+  ).catch(
+      err => next(err)
+  )
+})
 
 router.post('/signup', (req, res) => {
   User.register(new User({ username: req.body.username }),

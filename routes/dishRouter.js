@@ -16,7 +16,7 @@ dishRouter.route('/')
             err => next(err)
         )
 })
-.post(authenticate.veryfyUser, (req, res, next) => {
+.post(authenticate.veryfyUser, authenticate.verifyAdmin, (req, res, next) => {
     Dishes.create(req.body)
         .then(dish => {
             console.log('Dish created ' + dish)
@@ -28,11 +28,11 @@ dishRouter.route('/')
             err => next(err)
         )
 })
-.put(authenticate.veryfyUser, (req, res, next) => {
+.put(authenticate.veryfyUser, authenticate.verifyAdmin, (req, res, next) => {
     res.statusCode = 403
     res.end('PUT operation is not supported on /dishes')
 })
-.delete(authenticate.veryfyUser, (req, res, next) => {
+.delete(authenticate.veryfyUser, authenticate.verifyAdmin, (req, res, next) => {
     Dishes.remove({})
         .then(resp => {
             res.statusCode = 200
@@ -57,11 +57,11 @@ dishRouter.route('/:dishId')
             err => next(err)
         )
 })
-.post(authenticate.veryfyUser, (req, res, next) => {
+.post(authenticate.veryfyUser, authenticate.verifyAdmin, (req, res, next) => {
     res.statusCode = 403
     res.end('POST operation is not supported on /dishes/' + req.params.dishId )
 })
-.put(authenticate.veryfyUser, (req, res, next) => {
+.put(authenticate.veryfyUser, authenticate.verifyAdmin, (req, res, next) => {
     Dishes.findByIdAndUpdate(req.params.dishId, { $set: req.body }, { new: true })
         .then(dish => {
             res.statusCode = 200
@@ -72,7 +72,7 @@ dishRouter.route('/:dishId')
             err => next(err)
         )
 })
-.delete(authenticate.veryfyUser, (req, res, next) => {
+.delete(authenticate.veryfyUser, authenticate.verifyAdmin, (req, res, next) => {
     Dishes.findByIdAndRemove(req.params.dishId)
         .then(resp => {
             res.statusCode = 200
@@ -131,7 +131,7 @@ dishRouter.route('/:dishId/comments')
     res.end('PUT operation not supported on /dishes/'
         + req.params.dishId + '/comments')
 })
-.delete(authenticate.veryfyUser, (req, res, next) => {
+.delete(authenticate.veryfyUser, authenticate.verifyAdmin, (req, res, next) => {
     Dishes.findById(req.params.dishId)
     .then((dish) => {
         if (dish != null) {
@@ -186,6 +186,11 @@ dishRouter.route('/:dishId/comments/:commentId')
     Dishes.findById(req.params.dishId)
     .then((dish) => {
         if (dish != null && dish.comments.id(req.params.commentId) != null) {
+            if(!dish.comments.id(req.params.commentId).author.equals(req.user._id)){
+                err = new Error('You can only edit your own commnet!')
+                err.status = 404
+                return next(err) 
+            }
             if (req.body.rating) {
                 dish.comments.id(req.params.commentId).rating = req.body.rating
             }
@@ -220,6 +225,11 @@ dishRouter.route('/:dishId/comments/:commentId')
     Dishes.findById(req.params.dishId)
     .then((dish) => {
         if (dish != null && dish.comments.id(req.params.commentId) != null) {
+            if(!dish.comments.id(req.params.commentId).author.equals(req.user._id)){
+                err = new Error('You can only delete your own commnet!')
+                err.status = 404
+                return next(err) 
+            }
             dish.comments.id(req.params.commentId).remove()
             dish.save()
             .then((dish) => {
