@@ -4,19 +4,18 @@ const jwtStrategy = require('passport-jwt').Strategy
 const facebookTokenStrategy = require('passport-facebook-token')
 const extractJwt = require('passport-jwt').ExtractJwt
 const jwt = require('jsonwebtoken')
-
+var dotenv = require('dotenv').config()
 const User = require('./models/users')
-const config = require('./config')
 
 exports.local = passport.use(new localStrategy(User.authenticate()))
 passport.serializeUser(User.serializeUser())
 passport.deserializeUser(User.deserializeUser())
 
-exports.getToken = user => jwt.sign(user, config.secretKey, { expiresIn: 3600 })
+exports.getToken = user => jwt.sign(user, process.env.JWT_SECRET_KEY, { expiresIn: 3600 })
 
 let opts = {}
 opts.jwtFromRequest = extractJwt.fromAuthHeaderAsBearerToken()
-opts.secretOrKey = config.secretKey
+opts.secretOrKey = process.env.JWT_SECRET_KEY
 
 exports.jwtPassport = passport.use(new jwtStrategy(opts, 
     (jwt_payload, done) => {
@@ -42,8 +41,8 @@ exports.verifyAdmin = (req, res, next) => {
 }
 
 exports.facebookPassport = passport.use(new facebookTokenStrategy({
-    clientID: config.facebook.clientId,
-    clientSecret: config.facebook.clientSecret
+    clientID: process.env.FB_CLIENT_ID,
+    clientSecret: process.env.FB_SECRET_KEY
 }, (accessToken, refreshToken, profile, done) => {
     User.findOne({facebookId: profile.id}, (err, user) => {
         if (err) {

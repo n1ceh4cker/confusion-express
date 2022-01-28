@@ -37,6 +37,9 @@ server.on('listening', onListening);
  * Create HTTPS server.
  */ 
  
+/*
+HTTPS server code is commented because we host on heroku which itself provides secure traffic
+ 
 var options = {
   key: fs.readFileSync(__dirname+'/private.key'),
   cert: fs.readFileSync(__dirname+'/certificate.pem')
@@ -44,15 +47,18 @@ var options = {
 
 var secureServer = https.createServer(options,app);
 
+*/
 /**
  * Listen on provided port, on all network interfaces.
  */
 
+/*
 secureServer.listen(app.get('secPort'), () => {
   console.log('Server listening on port ',app.get('secPort'));
 });
 secureServer.on('error', onError);
 secureServer.on('listening', onListening);
+*/
 
 /**
  * Normalize a port into a number, string, or false.

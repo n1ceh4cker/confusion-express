@@ -5,19 +5,21 @@ var logger = require('morgan');
 var passport = require('passport')
 var authenticate = require('./authenticate')
 
-var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/userRouter');
 var dishRouter = require('./routes/dishRouter');
 var promoRouter = require('./routes/promoRouter');
 var leaderRouter = require('./routes/leaderRouter');
 var uploadRouter = require('./routes/uploadRouter');
 var favoriteRouter = require('./routes/favoriteRouter')
+var commentRouter = require('./routes/commentRouter');
+var dotenv = require('dotenv').config()
 const mongoose = require('mongoose');
-const config = require('./config');
 
 var app = express();
 
 // Secure traffic only
+/*
+this code is commented because we are hosting on heroku which iteself provide secure traffic
 app.all('*', (req, res, next) => {
   if (req.secure) {
     return next();
@@ -26,10 +28,7 @@ app.all('*', (req, res, next) => {
     res.redirect(307, 'https://' + req.hostname + ':' + app.get('secPort') + req.url);
   }
 });
-
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+*/
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -39,13 +38,13 @@ app.use(passport.initialize())
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/imageUpload', uploadRouter);
 app.use('/dishes', dishRouter);
 app.use('/promotions', promoRouter);
 app.use('/leaders', leaderRouter);
 app.use('/favorites', favoriteRouter);
+app.use('/comments', commentRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -54,16 +53,13 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+  // log the error message
+  res.status(err.status || 500)
+  console.error(err)
+  res.json({ err: err.message })
 });
 
-const url = config.mongooseUrl
+const url = process.env.MONGODB_URL
 const connect = mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
 connect.then((db) =>{
   console.log('Connected to server')

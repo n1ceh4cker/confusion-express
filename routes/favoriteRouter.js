@@ -8,8 +8,7 @@ const favorites = require('../models/favorites')
 favoriteRouter.route('/')
 .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
 .get(cors.corsWithOptions, authenticate.veryfyUser, (req, res, next) => {
-    Favorites.find({ user: req.user._id })
-        .populate('user')
+    Favorites.findOne({ user: req.user._id })
         .populate('dishes')
         .then(favorite => {
             res.statusCode = 200
@@ -31,7 +30,6 @@ favoriteRouter.route('/')
             favorite.save()
             .then((favorite) => {
                 Favorites.findById(favorite._id)
-                .populate('user')
                 .populate('dishes')
                 .then(favorite => {
                     res.statusCode = 200
@@ -45,7 +43,6 @@ favoriteRouter.route('/')
             .then(favorite => {
                 console.log('Favorites created ' + favorite)
                 Favorites.findById(favorite._id)
-                .populate('user')
                 .populate('dishes')
                 .then(favorite => {
                     res.statusCode = 200
@@ -63,7 +60,7 @@ favoriteRouter.route('/')
     res.end('PUT operation is not supported on /favorites')
 })
 .delete(cors.corsWithOptions, authenticate.veryfyUser, authenticate.verifyAdmin, (req, res, next) => {
-    Favorites.remove({ user: req.user._id })
+    Favorites.remove({})
         .then(resp => {
             res.statusCode = 200
             res.setHeader('Content-Type', 'application/json')
@@ -76,9 +73,22 @@ favoriteRouter.route('/')
 
 favoriteRouter.route('/:dishId')
 .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
-.get( (req, res, next) => {
-    res.statusCode = 403
-    res.end('GET operation is not supported on /favorites/:dishId')
+.get(cors.corsWithOptions, authenticate.veryfyUser, (req, res, next) => {
+    Favorites.findOne({ user: req.user._id })
+    .then((favorites) => {
+        if (favorites && favorites.dishes.indexOf(req.params.dishId) >= 0) {
+            res.statusCode = 200
+            res.setHeader('Content-Type', 'application/json')
+            res.json({exists: true, favorites: favorites})
+        }
+        else {
+            res.statusCode = 200
+            res.setHeader('Content-Type', 'application/json')
+            res.json({exists: false, favorites: favorites})
+        }
+    }, (err) => next(err))
+    .catch(err => next(err))
+  
 })
 .post(cors.corsWithOptions, authenticate.veryfyUser, (req, res, next) => {
     Favorites.findOne({ user: req.user._id })
@@ -91,7 +101,6 @@ favoriteRouter.route('/:dishId')
             favorite.save()
             .then((favorite) => {
                 Favorites.findById(favorite._id)
-                .populate('user')
                 .populate('dishes')
                 .then(favorite => {
                     res.statusCode = 200
@@ -105,7 +114,6 @@ favoriteRouter.route('/:dishId')
             .then(favorite => {
                 console.log('Favorites created ' + favorite)
                 Favorites.findById(favorite._id)
-                .populate('user')
                 .populate('dishes')
                 .then(favorite => {
                     res.statusCode = 200
@@ -122,15 +130,14 @@ favoriteRouter.route('/:dishId')
     res.statusCode = 403
     res.end('PUT operation is not supported on /favorites/:dishId')
 })
-.delete(cors.corsWithOptions, authenticate.veryfyUser, authenticate.verifyAdmin, (req, res, next) => {
+.delete(cors.corsWithOptions, authenticate.veryfyUser, (req, res, next) => {
     Favorites.findOne({ user: req.user._id })
     .then(favorite => {
         if(favorite != null){
-            favorite.dishes = favorite.dishes.filter(id => id!==req.params.dishId)
+          favorite.dishes = favorite.dishes.filter(id => id != req.params.dishId)
             favorite.save()
             .then((favorite) => {
                 Favorites.findById(favorite._id)
-                .populate('user')
                 .populate('dishes')
                 .then(favorite => {
                     res.statusCode = 200
