@@ -11,7 +11,7 @@ exports.local = passport.use(new localStrategy(User.authenticate()))
 passport.serializeUser(User.serializeUser())
 passport.deserializeUser(User.deserializeUser())
 
-exports.getToken = user => jwt.sign(user, process.env.JWT_SECRET_KEY, { expiresIn: 3600 })
+exports.getToken = user => jwt.sign(user, process.env.JWT_SECRET_KEY, { expiresIn: process.env.JWT_VALIDITY })
 
 let opts = {}
 opts.jwtFromRequest = extractJwt.fromAuthHeaderAsBearerToken()
